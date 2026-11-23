@@ -1,7 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const DB_FILE = path.join(__dirname, 'data', 'database.json');
+const dataDirName = fs.existsSync(path.join(__dirname, 'dados')) ? 'dados' : 'data';
+const DB_FILE = path.join(__dirname, dataDirName, 'database.json');
 
 // Garante que o diretório data existe
 if (!fs.existsSync(path.dirname(DB_FILE))) {
@@ -109,7 +110,7 @@ function cleanupExpiredReservations() {
 function getTickets() {
   cleanupExpiredReservations();
   const data = loadDatabase();
-  return Object.values(data.tickets);
+  return Object.values(data.tickets).sort((a, b) => parseInt(a.number, 10) - parseInt(b.number, 10));
 }
 
 // Obter resumo das estatísticas

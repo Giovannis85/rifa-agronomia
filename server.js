@@ -2,8 +2,18 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const db = require('./db');
-const mpService = require('./services/mercadopago');
+
+// Carrega o serviço do Mercado Pago (suporta 'services' ou 'serviços')
+let mpService;
+if (fs.existsSync(path.join(__dirname, 'services', 'mercadopago.js'))) {
+  mpService = require('./services/mercadopago');
+} else if (fs.existsSync(path.join(__dirname, 'serviços', 'mercadopago.js'))) {
+  mpService = require('./serviços/mercadopago');
+} else {
+  console.warn('Pasta do mercadopago não encontrada diretamente.');
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,7 +22,12 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'agronomia25';
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Suporta pasta 'public' ou 'público'
+const publicPath = fs.existsSync(path.join(__dirname, 'public')) 
+  ? path.join(__dirname, 'public') 
+  : path.join(__dirname, 'público');
+app.use(express.static(publicPath));
 
 // Intervalo a cada 30 segundos para liberar reservas expiradas
 setInterval(() => {
@@ -54,7 +69,6 @@ app.post('/api/orders/create', async (req, res) => {
       return res.status(400).json({ error: 'Nome e WhatsApp são obrigatórios' });
     }
 
-    // 1. Reserva os números no banco por 15 minutos
     const reservationMinutes = parseInt(process.env.RESERVATION_MINUTES || '15', 10);
     const reservation = db.reserveTickets(numbers, buyer, reservationMinutes);
 
@@ -64,7 +78,6 @@ app.post('/api/orders/create', async (req, res) => {
 
     const order = reservation.order;
 
-    // 2. Cria o PIX no Mercado Pago
     try {
       const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
       const notificationUrl = `${baseUrl}/api/webhook/mercadopago`;
@@ -77,7 +90,6 @@ app.post('/api/orders/create', async (req, res) => {
         notificationUrl
       });
 
-      // 3. Salva os dados do PIX no pedido
       db.attachPaymentInfo(order.id, pixResult);
 
       res.json({
@@ -95,7 +107,6 @@ app.post('/api/orders/create', async (req, res) => {
       });
     } catch (mpError) {
       console.error('Erro ao integrar com Mercado Pago:', mpError);
-      // Se falhar o PIX, cancela a reserva para não prender os números
       db.cancelOrder(order.id);
       return res.status(502).json({
         error: `Não foi possível gerar a cobrança PIX no Mercado Pago: ${mpError.message}. Tente novamente.`
@@ -107,7 +118,7 @@ app.post('/api/orders/create', async (req, res) => {
   }
 });
 
-// Consultar status do pedido (com verificação automática no Mercado Pago)
+// Consultar status do pedido
 app.get('/api/orders/:orderId/status', async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -117,8 +128,7 @@ app.get('/api/orders/:orderId/status', async (req, res) => {
       return res.status(404).json({ error: 'Pedido não encontrado' });
     }
 
-    // Se estiver pendente e tiver ID do pagamento, consulta diretamente no Mercado Pago
-    if (order.status === 'pending' && order.mpPaymentId) {
+    if (order.status === 'pending' && order.mpPaymentId && mpService) {
       const mpStatus = await mpService.getPaymentStatus(order.mpPaymentId);
 
       if (mpStatus && mpStatus.status === 'approved') {
@@ -130,7 +140,7 @@ app.get('/api/orders/:orderId/status', async (req, res) => {
 
     res.json({
       orderId: order.id,
-      status: order.status, // pending, paid, expired, cancelled
+      status: order.status,
       numbers: order.numbers,
       total: order.total,
       expiresAt: order.expiresAt,
@@ -142,15 +152,15 @@ app.get('/api/orders/:orderId/status', async (req, res) => {
   }
 });
 
-// Webhook do Mercado Pago (para confirmação instantânea em segundo plano)
+// Webhook do Mercado Pago
 app.post('/api/webhook/mercadopago', async (req, res) => {
-  res.status(200).send('OK'); // Responde 200 rápido ao Mercado Pago
+  res.status(200).send('OK');
 
   try {
     const { type, data, action } = req.body;
     const paymentId = (data && data.id) || req.query['data.id'] || req.query.id;
 
-    if ((type === 'payment' || action === 'payment.updated') && paymentId) {
+    if ((type === 'payment' || action === 'payment.updated') && paymentId && mpService) {
       console.log(`[Webhook] Recebida atualização do pagamento #${paymentId}`);
       const mpStatus = await mpService.getPaymentStatus(paymentId);
 
@@ -167,9 +177,8 @@ app.post('/api/webhook/mercadopago', async (req, res) => {
   }
 });
 
-// --- ROTAS DO PAINEL ADMIN ---
+// --- ADMIN ---
 
-// Middleware de autenticação admin
 function requireAdmin(req, res, next) {
   const adminKey = req.headers['x-admin-key'] || req.query.key;
   if (!adminKey || adminKey !== ADMIN_PASSWORD) {
@@ -178,7 +187,6 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-// Login admin
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body;
   if (password === ADMIN_PASSWORD) {
@@ -188,13 +196,11 @@ app.post('/api/admin/login', (req, res) => {
   }
 });
 
-// Listar todos os pedidos
 app.get('/api/admin/orders', requireAdmin, (req, res) => {
   const orders = db.getAllOrders();
   res.json(orders);
 });
 
-// Confirmar pedido manualmente (dinheiro no campus / churrasco)
 app.post('/api/admin/orders/:orderId/confirm', requireAdmin, (req, res) => {
   const { orderId } = req.params;
   const result = db.confirmPayment(orderId);
@@ -205,7 +211,6 @@ app.post('/api/admin/orders/:orderId/confirm', requireAdmin, (req, res) => {
   }
 });
 
-// Cancelar pedido e liberar números
 app.post('/api/admin/orders/:orderId/cancel', requireAdmin, (req, res) => {
   const { orderId } = req.params;
   const result = db.cancelOrder(orderId);
@@ -216,7 +221,6 @@ app.post('/api/admin/orders/:orderId/cancel', requireAdmin, (req, res) => {
   }
 });
 
-// Exportar compradores para CSV
 app.get('/api/admin/export', requireAdmin, (req, res) => {
   const tickets = db.getTickets();
   const paidTickets = tickets.filter(t => t.status === 'paid');
@@ -231,12 +235,6 @@ app.get('/api/admin/export', requireAdmin, (req, res) => {
   res.send('\uFEFF' + csv);
 });
 
-// Inicia o servidor
 app.listen(PORT, () => {
-  console.log(`====================================================`);
-  console.log(`🌱 Sistema da Rifa 25 Anos de Agronomia UFPA online!`);
-  console.log(`👉 Acesse a Rifa: http://localhost:${PORT}`);
-  console.log(`👉 Painel Admin: http://localhost:${PORT}/admin.html`);
-  console.log(`🔑 Senha do Admin padrão: ${ADMIN_PASSWORD}`);
-  console.log(`====================================================`);
+  console.log(`🌱 Sistema da Rifa 25 Anos de Agronomia UFPA online na porta ${PORT}!`);
 });
