@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel da Comissão | Rifa 25 Anos Agronomia UFPA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .admin-container { max-width: 1200px; margin: 30px auto; padding: 0 16px; }
+    .admin-card { background: #fff; border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-sm); border: 1px solid #e5e7eb; margin-bottom: 24px; }
+    .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+    .admin-title { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+    .admin-actions { display: flex; gap: 10px; }
+    .btn-export { background: #059669; color: #fff; border: none; padding: 10px 18px; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .btn-export:hover { background: #047857; }
+    .btn-refresh { background: #f3f4f6; border: 1px solid #d1d5db; padding: 10px 16px; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; }
+    
+    .table-responsive { overflow-x: auto; }
+    .orders-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
+    .orders-table th { background: #f9fafb; padding: 12px 14px; font-weight: 700; color: var(--text-dark); border-bottom: 2px solid #e5e7eb; }
+    .orders-table td { padding: 12px 14px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; }
+    .orders-table tr:hover { background: #f9fafb; }
+
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; }
+    .badge.paid { background: #dcfce7; color: #166534; }
+    .badge.pending { background: #fef3c7; color: #92400e; }
+    .badge.expired, .badge.cancelled { background: #fee2e2; color: #991b1b; }
+
+    .ticket-chip { display: inline-block; background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.75rem; margin: 2px; }
+    
+    .btn-action-sm { border: none; padding: 6px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; cursor: pointer; margin-right: 4px; }
+    .btn-action-confirm { background: #22c55e; color: #fff; }
+    .btn-action-cancel { background: #ef4444; color: #fff; }
+    .btn-wa-link { color: #059669; text-decoration: none; font-weight: 700; }
+
+    .login-box { max-width: 400px; margin: 80px auto; background: #fff; padding: 30px; border-radius: var(--radius-md); box-shadow: var(--shadow-md); text-align: center; border: 1px solid #e5e7eb; }
+    .login-box input { width: 100%; padding: 12px; margin: 16px 0; border: 1px solid #d1d5db; border-radius: var(--radius-sm); font-size: 1rem; }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <header class="top-header">
+    <div class="container brand-row">
+      <div class="brand-badge">🌱 Painel Administrativo • Agronomia UFPA Altamira</div>
+      <div class="admin-link">
+        <a href="index.html">← Voltar para a Rifa</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Login Area -->
+  <div id="login-view" class="container">
+    <div class="login-box">
+      <div style="font-size: 2.5rem; margin-bottom: 10px;">🔐</div>
+      <h2>Acesso da Comissão</h2>
+      <p style="color: #6b7280; font-size: 0.9rem; margin-top: 4px;">Digite a senha para gerenciar a rifa e acompanhar os pagamentos.</p>
+      
+      <form onsubmit="admin.login(event)">
+        <input type="password" id="admin-pass" placeholder="Senha do Administrador" required autofocus>
+        <button type="submit" class="btn-primary-large">Entrar no Painel</button>
+      </form>
+      <small style="display:block; margin-top: 15px; color: #9ca3af;">Senha padrão configurada: <code>agronomia25</code></small>
+    </div>
+  </div>
+
+  <!-- Dashboard Area (oculto antes do login) -->
+  <div id="dashboard-view" class="admin-container hidden">
+    
+    <!-- Top Stats -->
+    <div class="stats-bar" style="margin-bottom: 24px;">
+      <div class="stat-box">
+        <span class="stat-num" id="admin-stat-money">R$ 0,00</span>
+        <span class="stat-desc">Total Arrecadado (Pagos)</span>
+      </div>
+      <div class="stat-box paid">
+        <span class="stat-num" id="admin-stat-paid">0</span>
+        <span class="stat-desc">Números Pagos / Vendidos</span>
+      </div>
+      <div class="stat-box reserved">
+        <span class="stat-num" id="admin-stat-reserved">0</span>
+        <span class="stat-desc">Reservados (Aguardando PIX)</span>
+      </div>
+      <div class="stat-box available">
+        <span class="stat-num" id="admin-stat-available">0</span>
+        <span class="stat-desc">Números Livres</span>
+      </div>
+    </div>
+
+    <!-- Tabela de Pedidos -->
+    <div class="admin-card">
+      <div class="admin-header">
+        <div>
+          <h2 class="admin-title">📋 Lista de Pedidos & Compradores</h2>
+          <p style="color: #6b7280; font-size: 0.85rem;">Os pagamentos via PIX do Mercado Pago são confirmados automaticamente em tempo real.</p>
+        </div>
+        <div class="admin-actions">
+          <button class="btn-refresh" onclick="admin.loadData()">🔄 Atualizar</button>
+          <button class="btn-export" onclick="admin.exportCSV()">📥 Baixar Planilha (Excel/CSV)</button>
+        </div>
+      </div>
+
+      <!-- Filtros e Busca de Pedidos -->
+      <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+        <input type="text" id="admin-search" placeholder="Buscar por Nome, Telefone ou Número..." style="flex: 1; min-width: 260px; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;" oninput="admin.renderTable()">
+        <select id="admin-filter-status" style="padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;" onchange="admin.renderTable()">
+          <option value="all">Todos os Status</option>
+          <option value="paid">Apenas Pagos</option>
+          <option value="pending">Apenas Pendentes</option>
+          <option value="expired">Expirados / Cancelados</option>
+        </select>
+      </div>
+
+      <div class="table-responsive">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>Data/Hora</th>
+              <th>Comprador</th>
+              <th>WhatsApp</th>
+              <th>Números Escolhidos</th>
+              <th>Valor</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="orders-tbody">
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 20px;">Carregando pedidos...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const admin = {
+      token: localStorage.getItem('agronomia_admin_token') || '',
+      orders: [],
+
+      init() {
+        if (this.token) {
+          this.showDashboard();
+          this.loadData();
+        }
+      },
+
+      async login(e) {
+        e.preventDefault();
+        const pass = document.getElementById('admin-pass').value;
+
+        try {
+          const res = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: pass })
+          });
+
+          const data = await res.json();
+          if (data.success) {
+            this.token = data.token;
+            localStorage.setItem('agronomia_admin_token', this.token);
+            this.showDashboard();
+            this.loadData();
+          } else {
+            alert('Senha incorreta!');
+          }
+        } catch (err) {
+          alert('Erro ao conectar com servidor.');
+        }
+      },
+
+      showDashboard() {
+        document.getElementById('login-view').classList.add('hidden');
+        document.getElementById('dashboard-view').classList.remove('hidden');
+      },
+
+      async loadData() {
+        try {
+          const [resStats, resOrders] = await Promise.all([
+            fetch('/api/stats'),
+            fetch('/api/admin/orders', {
+              headers: { 'x-admin-key': this.token }
+            })
+          ]);
+
+          if (resOrders.status === 401) {
+            localStorage.removeItem('agronomia_admin_token');
+            location.reload();
+            return;
+          }
+
+          const stats = await resStats.json();
+          this.orders = await resOrders.json();
+
+          // Atualiza estatísticas
+          document.getElementById('admin-stat-money').textContent = `R$ ${stats.totalAmountRaised.toFixed(2).replace('.', ',')}`;
+          document.getElementById('admin-stat-paid').textContent = stats.paid;
+          document.getElementById('admin-stat-reserved').textContent = stats.reserved;
+          document.getElementById('admin-stat-available').textContent = stats.available;
+
+          this.renderTable();
+        } catch (err) {
+          console.error(err);
+        }
+      },
+
+      renderTable() {
+        const tbody = document.getElementById('orders-tbody');
+        tbody.innerHTML = '';
+
+        const search = (document.getElementById('admin-search').value || '').toLowerCase();
+        const filterStatus = document.getElementById('admin-filter-status').value;
+
+        const filtered = this.orders.filter(o => {
+          if (filterStatus !== 'all' && o.status !== filterStatus) return false;
+          if (search) {
+            const buyerMatch = (o.buyer.name || '').toLowerCase().includes(search);
+            const phoneMatch = (o.buyer.phone || '').includes(search);
+            const numMatch = o.numbers.some(n => n.includes(search));
+            if (!buyerMatch && !phoneMatch && !numMatch) return false;
+          }
+          return true;
+        });
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 24px; color: #9ca3af;">Nenhum pedido encontrado.</td></tr>';
+          return;
+        }
+
+        filtered.forEach(o => {
+          const tr = document.createElement('tr');
+          const cleanPhone = (o.buyer.phone || '').replace(/\D/g, '');
+          const waLink = `https://wa.me/55${cleanPhone}`;
+          const dateStr = new Date(o.createdAt).toLocaleString('pt-BR');
+
+          const statusBadge = `<span class="badge ${o.status}">${
+            o.status === 'paid' ? '✅ Pago' : 
+            o.status === 'pending' ? '⏳ Pendente' : 
+            o.status === 'expired' ? '⚠️ Expirado' : 'Cancelado'
+          }</span>`;
+
+          const chips = o.numbers.map(n => `<span class="ticket-chip">${n}</span>`).join(' ');
+
+          let actions = '';
+          if (o.status === 'pending') {
+            actions = `
+              <button class="btn-action-sm btn-action-confirm" title="Confirmar pagamento recebido manualmente" onclick="admin.confirmOrder('${o.id}')">Aprovar Manual</button>
+              <button class="btn-action-sm btn-action-cancel" title="Cancelar e liberar números" onclick="admin.cancelOrder('${o.id}')">Liberar</button>
+            `;
+          }
+
+          tr.innerHTML = `
+            <td><small>${dateStr}</small></td>
+            <td><strong>${o.buyer.name}</strong></td>
+            <td><a href="${waLink}" target="_blank" class="btn-wa-link">📲 ${o.buyer.phone}</a></td>
+            <td>${chips}</td>
+            <td><strong>R$ ${o.total.toFixed(2).replace('.', ',')}</strong></td>
+            <td>${statusBadge}</td>
+            <td>${actions}</td>
+          `;
+
+          tbody.appendChild(tr);
+        });
+      },
+
+      async confirmOrder(orderId) {
+        if (!confirm('Deseja confirmar o pagamento deste pedido manualmente (ex: dinheiro no campus)?')) return;
+        try {
+          const res = await fetch(`/api/admin/orders/${orderId}/confirm`, {
+            method: 'POST',
+            headers: { 'x-admin-key': this.token }
+          });
+          const data = await res.json();
+          if (data.success) {
+            this.loadData();
+          } else {
+            alert(data.error);
+          }
+        } catch (err) {
+          alert('Erro ao confirmar pedido.');
+        }
+      },
+
+      async cancelOrder(orderId) {
+        if (!confirm('Deseja cancelar esta reserva e liberar os números para venda novamente?')) return;
+        try {
+          const res = await fetch(`/api/admin/orders/${orderId}/cancel`, {
+            method: 'POST',
+            headers: { 'x-admin-key': this.token }
+          });
+          const data = await res.json();
+          if (data.success) {
+            this.loadData();
+          } else {
+            alert(data.error);
+          }
+        } catch (err) {
+          alert('Erro ao cancelar pedido.');
+        }
+      },
+
+      exportCSV() {
+        window.open(`/api/admin/export?key=${encodeURIComponent(this.token)}`, '_blank');
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => admin.init());
+  </script>
+</body>
+</html>

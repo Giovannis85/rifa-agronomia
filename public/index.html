@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rifa 25 Anos de Agronomia | UFPA - Campus de Altamira</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <header class="top-header">
+    <div class="container">
+      <div class="brand-row">
+        <div class="brand-badge">🌱 UFPA • Campus de Altamira</div>
+        <div class="admin-link">
+          <a href="admin.html">Painel da Comissão 🔐</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section with Poster Theme -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="hero-card">
+        <!-- Cartaz Oficial -->
+        <div class="official-flyer-wrap">
+          <img src="images/banner.jpg" alt="Cartaz Oficial 25 Anos Agronomia UFPA" class="official-flyer-img">
+        </div>
+
+        <div class="hero-badge">25 ANOS</div>
+        <h1 class="hero-title">Curso de Agronomia</h1>
+        <p class="hero-subtitle">UFPA - Campus de Altamira</p>
+        
+        <div class="hero-tag">GRANDE RIFA COMEMORATIVA</div>
+
+        <!-- Preço em Destaque -->
+        <div class="price-banner">
+          <span class="price-label">APENAS</span>
+          <span class="price-value">R$ 5,00</span>
+          <span class="price-unit">CADA NÚMERO</span>
+        </div>
+
+        <div class="event-info">
+          <div class="info-item">
+            <span class="info-icon">📅</span>
+            <div>
+              <strong>SÁBADO, DIA 28/11</strong>
+              <small>Data do Sorteio</small>
+            </div>
+          </div>
+          <div class="info-divider"></div>
+          <div class="info-item">
+            <span class="info-icon">🥩</span>
+            <div>
+              <strong>DURANTE O CHURRASCO</strong>
+              <small>De comemoração da turma!</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seção de Premiações -->
+        <div class="prizes-section">
+          <h2 class="prizes-title">🎁 PREMIAÇÕES ESPECIAIS 🎁</h2>
+          <div class="prizes-grid">
+            <div class="prize-card">
+              <span class="prize-emoji">🔑</span>
+              <strong>Chaveiro</strong>
+              <small>25 Anos Agronomia</small>
+            </div>
+            <div class="prize-card">
+              <span class="prize-emoji">👢</span>
+              <strong>Bota</strong>
+              <small>Estilo Campo</small>
+            </div>
+            <div class="prize-card">
+              <span class="prize-emoji">🤠</span>
+              <strong>Chapéu</strong>
+              <small>Da Agronomia</small>
+            </div>
+            <div class="prize-card">
+              <span class="prize-emoji">🔪</span>
+              <strong>Canivete</strong>
+              <small>Aço Inox</small>
+            </div>
+            <div class="prize-card">
+              <span class="prize-emoji">✂️</span>
+              <strong>Tesoura</strong>
+              <small>De Poda Profissional</small>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Grid Section -->
+  <main class="main-content">
+    <div class="container">
+
+      <!-- Barra de Estatísticas Rápidas -->
+      <div class="stats-bar">
+        <div class="stat-box">
+          <span class="stat-num" id="stat-total">1.000</span>
+          <span class="stat-desc">Total de Números</span>
+        </div>
+        <div class="stat-box available">
+          <span class="stat-num" id="stat-available">-</span>
+          <span class="stat-desc">Disponíveis</span>
+        </div>
+        <div class="stat-box reserved">
+          <span class="stat-num" id="stat-reserved">-</span>
+          <span class="stat-desc">Reservados</span>
+        </div>
+        <div class="stat-box paid">
+          <span class="stat-num" id="stat-paid">-</span>
+          <span class="stat-desc">Já Comprados</span>
+        </div>
+      </div>
+
+      <!-- Barra de Ferramentas / Filtros / Surpresinha -->
+      <div class="tools-card">
+        <div class="tools-header">
+          <h3>⚡ Escolha rápida ou busque seus números:</h3>
+        </div>
+
+        <!-- Surpresinha (Gerador Rápido) -->
+        <div class="quick-picks">
+          <span class="quick-picks-label">Surpresinha:</span>
+          <button class="btn-quick" onclick="app.quickPick(1)">+1 da Sorte</button>
+          <button class="btn-quick" onclick="app.quickPick(5)">+5 Números</button>
+          <button class="btn-quick" onclick="app.quickPick(10)">+10 Números</button>
+          <button class="btn-quick" onclick="app.quickPick(20)">+20 Números</button>
+          <button class="btn-quick clear" onclick="app.clearSelection()">Limpar Seleção</button>
+        </div>
+
+        <!-- Barra de Busca e Filtro de Status -->
+        <div class="search-filter-row">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="search-input" placeholder="Buscar número específico (ex: 025, 777)..." oninput="app.handleSearch(this.value)">
+          </div>
+
+          <div class="filter-buttons">
+            <button class="filter-btn active" data-filter="all" onclick="app.setFilter('all')">Todos</button>
+            <button class="filter-btn" data-filter="available" onclick="app.setFilter('available')">Disponíveis</button>
+            <button class="filter-btn" data-filter="selected" onclick="app.setFilter('selected')">Selecionados (<span id="filter-selected-count">0</span>)</button>
+          </div>
+        </div>
+
+        <!-- Legenda -->
+        <div class="legend-row">
+          <div class="legend-item"><span class="legend-dot available"></span> Livre</div>
+          <div class="legend-item"><span class="legend-dot selected"></span> Selecionado</div>
+          <div class="legend-item"><span class="legend-dot reserved"></span> Reservado</div>
+          <div class="legend-item"><span class="legend-dot paid"></span> Pago</div>
+        </div>
+      </div>
+
+      <!-- Grade dos 1000 números -->
+      <div class="grid-container">
+        <div id="tickets-grid" class="tickets-grid">
+          <!-- Renderizado via Javascript -->
+          <div class="loading-spinner">Carregando os 1.000 números da rifa...</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Barra Fixa Inferior de Checkout (Sticky Bar) -->
+  <div id="checkout-bar" class="checkout-bar hidden">
+    <div class="container checkout-bar-inner">
+      <div class="checkout-info">
+        <div class="checkout-count">
+          <strong id="bar-selected-count">0</strong> números selecionados
+        </div>
+        <div class="checkout-total">
+          Total: <strong id="bar-total-amount">R$ 0,00</strong>
+        </div>
+      </div>
+      <button class="btn-checkout" onclick="app.openCheckoutModal()">
+        <span>Ir para Pagamento PIX</span>
+        <span class="btn-arrow">→</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: Formulário de Checkout -->
+  <div id="modal-checkout" class="modal-backdrop hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Finalizar Reserva dos Bilhetes</h3>
+        <button class="modal-close" onclick="app.closeModal('modal-checkout')">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="order-summary-box">
+          <div class="summary-line">
+            <span>Números escolhidos (<strong id="modal-summary-count">0</strong>):</span>
+            <span class="summary-total" id="modal-summary-total">R$ 0,00</span>
+          </div>
+          <div class="selected-tags" id="modal-selected-tags">
+            <!-- Tags dos números selecionados -->
+          </div>
+        </div>
+
+        <form id="checkout-form" onsubmit="app.submitOrder(event)">
+          <div class="form-group">
+            <label for="buyer-name">Seu Nome Completo *</label>
+            <input type="text" id="buyer-name" required placeholder="Ex: João da Silva">
+          </div>
+
+          <div class="form-group">
+            <label for="buyer-phone">WhatsApp / Celular com DDD *</label>
+            <input type="tel" id="buyer-phone" required placeholder="(93) 99999-9999" maxlength="15" oninput="app.maskPhone(this)">
+            <small>Usaremos este número para identificação e entrega do prêmio!</small>
+          </div>
+
+          <div class="form-group">
+            <label for="buyer-email">E-mail (opcional)</label>
+            <input type="email" id="buyer-email" placeholder="seuemail@exemplo.com">
+          </div>
+
+          <div class="modal-notice">
+            ⏱️ Ao avançar, seus números ficarão <strong>reservados exclusivamente por 15 minutos</strong> para você realizar o pagamento via PIX.
+          </div>
+
+          <button type="submit" id="btn-submit-order" class="btn-primary-large">
+            <span>Gerar PIX Mercado Pago</span>
+            <span class="btn-icon">⚡</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Pagamento PIX e QR Code Mercado Pago -->
+  <div id="modal-pix" class="modal-backdrop hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Pagamento via PIX Automático</h3>
+        <button class="modal-close" onclick="app.closePixModal()">×</button>
+      </div>
+
+      <div class="modal-body text-center">
+        <!-- Cronômetro de Reserva -->
+        <div class="timer-box">
+          <span>Tempo restante para pagar:</span>
+          <strong id="pix-timer">15:00</strong>
+        </div>
+
+        <div class="pix-value-box">
+          <span>Valor a pagar:</span>
+          <h2 id="pix-total-amount">R$ 0,00</h2>
+        </div>
+
+        <!-- QR Code -->
+        <div class="qrcode-wrapper">
+          <div id="qrcode-container" class="qrcode-box">
+            <!-- Imagem QR Code gerada pelo Mercado Pago -->
+          </div>
+          <small class="qrcode-tip">Abra o app do seu banco e escaneie o QR Code</small>
+        </div>
+
+        <!-- Copia e Cola -->
+        <div class="copia-cola-section">
+          <label>Ou copie o código PIX abaixo:</label>
+          <div class="copy-input-row">
+            <input type="text" id="pix-code-input" readonly>
+            <button class="btn-copy" onclick="app.copyPixCode()">
+              <span id="copy-btn-text">Copiar Código PIX</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Status de Verificação em Tempo Real -->
+        <div class="payment-status-checker">
+          <div class="pulsing-spinner"></div>
+          <div>
+            <strong>Aguardando confirmação do banco...</strong>
+            <p>Assim que você pagar no aplicativo do seu banco, o sistema confirma e libera seus números automaticamente!</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Pagamento Confirmado com Sucesso -->
+  <div id="modal-success" class="modal-backdrop hidden">
+    <div class="modal-content text-center">
+      <div class="success-icon">🎉</div>
+      <h2 class="success-title">Pagamento Confirmado!</h2>
+      <p class="success-subtitle">Seus bilhetes para a Rifa de 25 Anos de Agronomia foram registrados com sucesso!</p>
+
+      <div class="success-numbers-box">
+        <span>Seus números da sorte:</span>
+        <div id="success-numbers-list" class="success-tags"></div>
+      </div>
+
+      <div class="success-details">
+        <p><strong>Comprador:</strong> <span id="success-buyer-name">-</span></p>
+        <p><strong>Sorteio:</strong> Sábado, dia 28/11 durante o churrasco!</p>
+      </div>
+
+      <div class="success-actions">
+        <button class="btn-whatsapp" onclick="app.shareWhatsApp()">
+          Compartilhar no WhatsApp 📲
+        </button>
+        <button class="btn-secondary" onclick="app.finishSuccess()">
+          Voltar para a Página Inicial
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast hidden"></div>
+
+  <footer class="footer">
+    <div class="container text-center">
+      <p>🌱 <strong>25 Anos do Curso de Agronomia • UFPA Campus de Altamira</strong></p>
+      <p class="footer-note">Sistema Oficial de Rifas e Ações Entre Amigos. Pagamento seguro integrado via Mercado Pago.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
